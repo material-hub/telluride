@@ -367,7 +367,7 @@ body{letter-spacing:-.006em}
   #cdetail #cnote{flex:none;min-height:0;max-height:none}
   #detail,#cdetail,#moviemodal{width:calc(100vw - 12px);max-height:calc(100vh - 12px)}
   #detail .dgrid>.dcol:nth-child(2){max-width:none;justify-self:stretch}
-  #detail #dmoviebtn{margin-left:0}
+  #detail #dmoviebtn{margin-left:auto}
   #cstruct{height:260px!important}#mvm-grid,.mvm-panel{height:340px}
   .mvm-metrics{grid-template-columns:1fr}.mvm-metrics b{white-space:normal}
   #moviemodal,#moviemodal.continuous{width:calc(100vw - 12px);height:calc(100vh - 12px);overflow:auto}#mvm-body{padding:10px;flex:none}.structure-viewbar button{padding-inline:6px}
@@ -460,7 +460,7 @@ body{letter-spacing:-.006em}
       <div class="tview" id="dtview"><div class="tspacer" id="dtspacer"></div></div>
     </div>
     <div id="detail"><button class="mclose" onclick="closeModals()">✕ close</button>
-      <div class="dhead"><span>Defect thermodynamics <span class="sub" id="dtitle"></span></span><span id="dmoviebtn"></span></div>
+      <div class="dhead"><span>Defect thermodynamics <span class="sub" id="dtitle"></span></span></div>
       <div class="dgrid">
         <div class="dcol">
           <h4>Breakdown of calculation outputs</h4>
@@ -474,7 +474,7 @@ body{letter-spacing:-.006em}
           <h4 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Formation energy vs Fermi level
             <select id="dcondsel" onchange="dRedrawPlot()"></select></h4>
           <div id="efdetailplot"></div>
-          <h4 id="dstructhead" style="margin-top:10px">Defect structure</h4>
+          <h4 id="dstructhead" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Defect structure<span id="dmoviebtn"></span></h4>
           <div id="dstruct" style="height:399px"></div>
           <div class="notebox" id="dstructnote"></div>
         </div>
