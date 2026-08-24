@@ -449,9 +449,9 @@ body{letter-spacing:-.006em}
     <label><input type="checkbox" id="ck-allq"> Has all 5 charge states</label>
     <label><input type="checkbox" id="ck-pbesol" checked> PBEsol</label>
     <label><input type="checkbox" id="ck-hsesoc" checked> HSE+SOC</label>
-    <label><input type="checkbox" id="ck-hse"> HSE06</label>
-    <label><input type="checkbox" id="ck-pbe"> PBE</label>
-    <label><input type="checkbox" id="ck-pbeu"> PBE+U</label>
+    <label><input type="checkbox" id="ck-hse" checked> HSE06</label>
+    <label><input type="checkbox" id="ck-pbe" checked> PBE</label>
+    <label><input type="checkbox" id="ck-pbeu" checked> PBE+U</label>
   </div>
   <div class="covstrip" id="dcov"></div>
   <div class="tbox" id="dtbox">
@@ -797,8 +797,9 @@ function dApplyFilters(){
   if(document.getElementById("ck-pbe").checked)fs.add("pbe");
   if(document.getElementById("ck-pbeu").checked)fs.add("pbe_u");
   const dQEls=q?queryEls(q):null;
+  const fsAll=fs.size===0;   // EMPTY MEANS ALL
   dFiltered=DEFECTS.filter(r=>{
-    if(!fs.has(r.f))return false;
+    if(!fsAll&&!fs.has(r.f))return false;
     if(dClass!=="all"&&!r.clset.has(dClass)&&r.cls!==dClass)return false;
     if(spont&&!r.spont)return false;
     if(allq&&r.nq<5)return false;
@@ -1171,6 +1172,15 @@ async function dRedrawPlot(){
 }
 function defectTrajectoryKey(r,dkey){
   if(HAVE_TRAJ.has(dkey)) return dkey;
+  /* The composition split (README ra30) renamed 1,228 rows; 47 of them have their trajectory
+     archived under the OLD directory name, so looking up only the new name lost the movie and
+     the relaxed structure. r.aa carries the archived name -- try it before giving up. */
+  if(r.aa&&r.aa!==r.d){
+    const ka=`${r.f}__${r.h}__${r.aa}`;
+    if(HAVE_TRAJ.has(ka)) return ka;
+    const kap=`pbesol__${r.h}__${r.aa}`;
+    if(HAVE_TRAJ.has(kap)) return kap;
+  }
   const pbesol=`pbesol__${r.h}__${r.d}`;
   if(HAVE_TRAJ.has(pbesol)) return pbesol;
   /* 124 rows name the host without its _kesterite/_stannite suffix while the trajectory was
