@@ -449,6 +449,9 @@ body{letter-spacing:-.006em}
     <label><input type="checkbox" id="ck-allq"> Has all 5 charge states</label>
     <label><input type="checkbox" id="ck-pbesol" checked> PBEsol</label>
     <label><input type="checkbox" id="ck-hsesoc" checked> HSE+SOC</label>
+    <label><input type="checkbox" id="ck-hse"> HSE06</label>
+    <label><input type="checkbox" id="ck-pbe"> PBE</label>
+    <label><input type="checkbox" id="ck-pbeu"> PBE+U</label>
   </div>
   <div class="covstrip" id="dcov"></div>
   <div class="tbox" id="dtbox">
@@ -790,6 +793,9 @@ function dApplyFilters(){
   const allq=document.getElementById("ck-allq").checked;
   const fs=new Set(); if(document.getElementById("ck-pbesol").checked)fs.add("pbesol");
   if(document.getElementById("ck-hsesoc").checked)fs.add("hse_soc");
+  if(document.getElementById("ck-hse").checked)fs.add("hse");
+  if(document.getElementById("ck-pbe").checked)fs.add("pbe");
+  if(document.getElementById("ck-pbeu").checked)fs.add("pbe_u");
   const dQEls=q?queryEls(q):null;
   dFiltered=DEFECTS.filter(r=>{
     if(!fs.has(r.f))return false;
@@ -851,10 +857,12 @@ function dRenderMeta(){
      values are spontaneous (E<sup>f</sup> &lt; 0). "—" = not available (chemical potential not published
      for that condition, or charge state not simulated). Click any row to see the full formation-energy
      diagram and per-charge-state raw data. <span class="showing">Showing ${dFiltered.length.toLocaleString()} of ${n.toLocaleString()} defect entries.</span>`;
-  const nP=DEFECTS.filter(r=>r.f==="pbesol").length,nH=DEFECTS.filter(r=>r.f==="hse_soc").length;
   const hosts=new Set(DEFECTS.map(r=>r.h));
+  const cnt={}; DEFECTS.forEach(r=>{cnt[r.f]=(cnt[r.f]||0)+1;});
+  const covTxt=["pbesol","hse_soc","hse","pbe","pbe_u"]
+    .filter(f=>cnt[f]).map(f=>`${THEORY[f]} <b>${cnt[f]}</b>`).join(" · ");
   document.getElementById("dcov").innerHTML=
-    `Coverage — PBEsol <b>${nP}</b> defect entries · HSE+SOC <b>${nH}</b> · <b>${hosts.size}</b> hosts ·
+    `Coverage — ${covTxt} defect entries · <b>${hosts.size}</b> hosts ·
      charge states −2 … +2 · all values pure DFT (MLFF models live in the nanoHUB tool)`;
 }
 async function dOpenDetail(r){
@@ -1307,7 +1315,7 @@ async function mountDefectStructure(r,trajKey){
   note.innerHTML="";
 }
 document.getElementById("dsearch").addEventListener("input",dApplyFilters);
-["ck-spont","ck-allq","ck-pbesol","ck-hsesoc"].forEach(id=>
+["ck-spont","ck-allq","ck-pbesol","ck-hsesoc","ck-hse","ck-pbe","ck-pbeu"].forEach(id=>
   document.getElementById(id).addEventListener("change",dApplyFilters));
 document.querySelectorAll("#view-explorer .cpill").forEach(p=>p.onclick=()=>{
   document.querySelectorAll("#view-explorer .cpill").forEach(x=>x.classList.remove("on"));
