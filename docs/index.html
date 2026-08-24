@@ -474,7 +474,7 @@ body{letter-spacing:-.006em}
           <h4 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">Formation energy vs Fermi level
             <select id="dcondsel" onchange="dRedrawPlot()"></select></h4>
           <div id="efdetailplot"></div>
-          <h4 id="dstructhead" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">Defect structure<span id="dmoviebtn"></span></h4>
+          <h4 id="dstructhead" style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span id="dstructlabel">Defect structure</span><span id="dmoviebtn"></span></h4>
           <div id="dstruct" style="height:399px"></div>
           <div class="notebox" id="dstructnote"></div>
         </div>
@@ -1227,12 +1227,12 @@ async function mountDefectStructure(r,trajKey){
   const el=document.getElementById("dstruct"), note=document.getElementById("dstructnote");
   freeMV(el); el.replaceChildren(); note.innerHTML="";
   note.style.display="none";
-  document.getElementById("dstructhead").textContent="Defect structure";
+  document.getElementById("dstructlabel").textContent="Defect structure";
   if(!trajKey){
     const model=await unrelaxedDefectModel(r);
     if(dSel!==r) return;
     if(model){
-      document.getElementById("dstructhead").textContent="Defect structure · unrelaxed site model";
+      document.getElementById("dstructlabel").textContent="Defect structure · unrelaxed site model";
       const h0=await hostSupercell(r);
       sgShow(el,{type:"struct",cif:structureCIF(model),bulkCif:h0?structureCIF(h0):null,
         nparts:defectPartCounts(r.d).atoms+defectPartCounts(r.d).vac});
@@ -1242,7 +1242,7 @@ async function mountDefectStructure(r,trajKey){
     return;
   }
   const pbesolFallback=r.f!=="pbesol"&&trajKey.startsWith("pbesol__");
-  if(pbesolFallback) document.getElementById("dstructhead").textContent="Defect structure · PBEsol-relaxed geometry";
+  if(pbesolFallback) document.getElementById("dstructlabel").textContent="Defect structure · PBEsol-relaxed geometry";
   note.style.display="none";
   el.innerHTML='<div class="notebox" style="margin:12px">loading defect structure…</div>';
   let data=null;
@@ -1303,7 +1303,7 @@ async function mountDefectStructure(r,trajKey){
   if(marks.length) bits.push(`defect ${marks.length===1?"site":"sites"} in black`);
   if(vac.length) bits.push(vac.map(v=>`missing ${v.el} at (${v.abc.map(x=>x.toFixed(3)).join(", ")})`).join(" · ")
     +" — no atom to mark, so hover cannot name it");
-  document.getElementById("dstructhead").textContent=bits.length?`${base} · ${bits.join(" · ")}`:base;
+  document.getElementById("dstructlabel").textContent=bits.length?`${base} · ${bits.join(" · ")}`:base;
   if(marks.length) recentreOnSite(st,marks[0]);
   const bulk=host?structureCIF(host):null;
   // No `highlight`: Kosmos derives the marked sites from bulkCif + nparts itself (anomaly-ranked
