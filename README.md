@@ -12,7 +12,7 @@ The tool runs live in the browser on nanoHUB — no installation required:
 
 > **▶ Launch the tool: [nanohub.org/tools/defectdatabase](https://nanohub.org/tools/defectdatabase)**
 >
-> **🌐 Browse the library: [material-hub.github.io/telluride](https://material-hub.github.io/telluride/)** — a compound explorer with 6763 DFT-computed I–III–VI₂ / I₂–II–IV–VI₄ chalcogenides (formation energy, decomposition energy, band gap, dielectric constant, SLME) plus interactive defect formation-energy diagrams for II–VI hosts at PBEsol and HSE+SOC, computed live from the published dataset. The website reports DFT data only; the MLFF models are used in the simulation tool.
+> **🌐 Browse the library: [material-hub.github.io/telluride](https://material-hub.github.io/telluride/)** — a compound explorer with 5,192 chalcogenide compounds (4,497 I₂–II–IV–VI₄ kesterite/stannite, 376 I–III–VI₂, 75 II–VI alloys, plus binaries and elemental references) published as 20,240 theory/polymorph rows — PBEsol 7,344, HSE06 5,725, HSE06+SOC 6,966, PBE 197, PBE+U 8 — with formation energy, decomposition energy (19,311 rows), band gap (18,142), dielectric constant and SLME (6,636 / 6,519, from the HSE06+SOC LOPTICS campaign), and 4,052 point defects on 366 hosts with formation-energy diagrams vs Fermi level, chemical-potential solutions and element-projected DOS (2,445 defects), computed live from the published dataset. The website reports DFT data only; the MLFF models are used in the simulation tool.
 
 Developed in the Mannodi research group at Purdue University (Md Habibur Rahman, Yi Yang, Arun Mannodi-Kanakkithodi).
 
