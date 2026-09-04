@@ -1363,7 +1363,19 @@ const CHAS=[["dos","Element-projected DOS",(r,k,v)=>!!k&&HAVE_DOS.has(k)],
             ["optics","Dielectric constant and SLME",(r,k,v)=>v[3]!==null&&v[3]!==undefined]];
 function cMovieKey(r,ord){
   const FKEY={"PBE":"pbe","PBEsol":"pbesol","HSE06":"hse","HSE06 (no PS)":"hse_no_ps","HSE+SOC":"hse_soc","PBE+U":"pbe_u"}[r.f];
-  return r.rk==="HSE06 (A2BCX4)" ? `host__hse2x2x1__${r.n}_${ord}` : `host__${r.fk||FKEY}__${r.n}`;
+  /* ra177: 4,964 of the 5,300 archived host trajectories are keyed host__hse2x2x1__<n>_<ord>.
+     This function only produced that form when r.rk==="HSE06 (A2BCX4)", and the COMPOUND payload
+     carries only {n,f,o,b} -- no rk -- so the branch was dead and every compound fell through to
+     host__<fk>__<n>, which matches 336 of 13,967. 3,373 HSE06 movies were archived, shipped and
+     served, and unreachable from the UI. Resolve against what is actually archived, most specific
+     first, and never across levels of theory: the hse2x2x1 files are HSE runs and belong only to
+     HSE06 rows. */
+  const fk=r.fk||FKEY;
+  const cand = r.f==="HSE06"
+    ? [`host__hse2x2x1__${r.n}_${ord}`,`host__hse2x2x1__${r.n}`,`host__${fk}__${r.n}_${ord}`,`host__${fk}__${r.n}`]
+    : [`host__${fk}__${r.n}`,`host__${fk}__${r.n}_${ord}`];
+  for(const k of cand) if(HAVE_TRAJ.has(k)) return k;
+  return cand[cand.length-1];
 }
 const cSteps=v=>v.length>28?v[28]:null;
 const cMode =v=>v.length>29?v[29]:null;
