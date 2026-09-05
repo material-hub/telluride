@@ -935,17 +935,15 @@ async function dOpenDetail(r){
       <div style="color:var(--wbg-muted);font-size:13px;margin-bottom:4px">Σn<sub>i</sub>μ<sub>i</sub> = <b>${muTxt}</b>
       (archived chem_pot vertex for this defect's exchanged atoms)</div>
       <table class="minitbl"><tr><th>q</th><th>E<sub>defect,q</sub></th><th>E<sub>bulk ref</sub></th><th>ΔE</th>
-        <th>Σn<sub>i</sub>μ<sub>i</sub></th><th>q·E<sub>VBM</sub></th><th>E<sub>corr</sub></th><th>Eᶠ@VBM</th><th>Eᶠ@CBM</th></tr>`+
+        <th>Σn<sub>i</sub>μ<sub>i</sub></th><th>q·E<sub>VBM</sub></th><th>Correction</th><th>Eᶠ@VBM</th><th>Eᶠ@CBM</th></tr>`+
       QS.map(q=>{
         const c=vxv.q[q];
         if(!c) return `<tr><td>${+q>0?"+"+q:q}</td><td colspan="8" style="color:var(--wbg-muted)">not run</td></tr>`;
-        const corrTxt = (+q===0) ? "—"
-          : ((c.ec!==null&&c.ec!==undefined&&r.corr&&r.corr[q]) ? fmt(c.ec) : "uncorrected");
-        const corrWhy = (c.cs||"").replace(/"/g,"&quot;");
+        const corrTxt = r.corr&&r.corr[q] ? "eFNV" : "uncorrected";
         const qv = (c.vbm!==null&&c.vbm!==undefined&&r.v!==null) ? (+q)*r.v : null;
         return `<tr><td>${+q>0?"+"+q:q}</td><td>${fmt(c.E,3)}</td><td>${fmt(c.Ebulk,3)}</td><td>${fmt(c.dE)}</td>
           <td>${fmt(c.musum)}</td><td>${fmt(qv)}</td>
-          <td title="${corrWhy}"${r.corr&&r.corr[q]?'':' style="color:#a5541a"'}>${corrTxt}</td>
+          <td${r.corr&&r.corr[q]?'':' style="color:#a5541a"'}>${corrTxt}</td>
           <td><b>${fmt(c.vbm)}</b></td><td>${fmt(c.cbm)}</td></tr>`;
       }).join("")+`</table>`;
     // the chemical-potential term, split per element, so Sum(n_i mu_i) is auditable rather than
@@ -972,15 +970,10 @@ async function dOpenDetail(r){
         E<sub>bulk ref</sub> = that per-atom energy × <b>${r.nps||"?"}</b> atoms — the commensurate
         pristine supercell this defect cell derives from (defect cell: ${r.nat} atoms).</div>`;
   }
-  sig+=`<p class="footnote" style="margin-top:6px">E<sub>corr</sub> is the image-charge term added to the
-    formation energy of a charged cell: the Lany–Zunger screened monopole, q²α<sub>M</sub>/(2εL)
-    scaled by 1 − (1/3)(1 − 1/ε), with α<sub>M</sub> from an Ewald sum on the actual supercell and ε the
-    static dielectric constant of that host (Lany and Zunger, Phys. Rev. B 78, 235104 (2008)). Where a
-    LOCPOT was archived the core-potential alignment −q·ΔV is included too; hover the value to see which
-    terms it carries and the ε it used. "uncorrected" means the host has no sourced static dielectric
-    constant, or the run has no cell-matched pristine reference — no image term is computed and none is
-    interpolated, and the same holds for "not run", a charge state the campaign ladder never included.
-    Host: ${subHTML(r.h)} · class ${r.cls}.</p>`;
+  sig+=`<p class="footnote" style="margin-top:6px">* charged state without an archived eFNV correction —
+    shown uncorrected, excluded from the envelope and the transition levels. Corrections are the
+    campaign's Kumagai eFNV values. "not run" = that charge state was not part of the campaign ladder;
+    nothing is interpolated. Host: ${subHTML(r.h)} · class ${r.cls}.</p>`;
   const sigEl=document.getElementById("dsigma");
   typeInto(sigEl,sig);
   loadChempot().then(()=>{
