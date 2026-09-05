@@ -2293,7 +2293,29 @@ async function openMovie(key,options,label,dark,marks,vac){
     const n=data[o.sub].frames.length;
     return `<option value="${o.sub}">${MVM.opts.length>1?o.name+" · ":"ionic relaxation · "}${n} frames</option>`;}).join("");
   sel.onchange=()=>mvmLoad(sel.value);
-  if(!MVM.opts.length){ document.getElementById("mvm-summary").textContent="no multi-step relaxation archived"; return; }
+  // ra189: a static run has exactly one archived frame, and this branch used to print
+  // "no multi-step relaxation archived" and RETURN -- leaving both viewer panels empty and the
+  // playback controls sitting there with nothing to play (reported on Zn_i in CdS). The geometry
+  // is in the same payload; render it, and say plainly why there is nothing to animate.
+  if(!MVM.opts.length){
+    MVM.opts=options.filter(o=>data[o.sub]&&data[o.sub].frames&&data[o.sub].frames.length===1);
+    if(!MVM.opts.length){ document.getElementById("mvm-summary").textContent="no geometry archived"; return; }
+    sel.style.display=MVM.opts.length>1?"":"none";
+    sel.innerHTML=MVM.opts.map(o=>`<option value="${o.sub}">${o.name} \u00b7 final geometry</option>`).join("");
+    await mvmLoad(MVM.opts[0].sub);
+    if(MVM.timer){clearInterval(MVM.timer);MVM.timer=null;}
+    document.getElementById("mvm-kind").textContent="Final geometry";
+    document.getElementById("mvm-summary").innerHTML=
+      `Static single-point calculation <span class="sep">|</span> ionic steps (NSW) = 0 `+
+      `<span class="sep">|</span> one archived configuration, so there is nothing to animate. `+
+      `The relaxation that produced this geometry was run at a different level of theory and its `+
+      `trajectory is not in this archive.`;
+    ["mvm-play","mvm-prev","mvm-next","mvm-speed"].forEach(id=>{
+      const e=document.getElementById(id); if(e){e.disabled=true;e.style.opacity=".45";e.style.cursor="default";}});
+    return;
+  }
+  ["mvm-play","mvm-prev","mvm-next","mvm-speed"].forEach(id=>{
+    const e=document.getElementById(id); if(e){e.disabled=false;e.style.opacity="";e.style.cursor="";}});
   mvmLoad(MVM.opts[0].sub);
 }
 const EDIFFG=0.05;   // |F| convergence criterion of these campaigns (eV/Å)
