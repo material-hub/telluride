@@ -943,6 +943,15 @@ async function dOpenDetail(r){
             h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--wbg-muted)">No ${D}-containing compound with only host elements is archived at ${THEORY[r.f]}, so the elemental limit is the only bound.</span>`;
           h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cap = min = ${f3(c.dmu)} eV (limiting phase ${subHTML((c.limiting_phase||"").replace("(elemental)"," (elemental)"))})
             → μ<sub>${D}</sub> = ${f3(c.mu0)} + (${f3(c.dmu)}) = <b>${f3(c.mu)}</b> eV`;
+          // ra191: if the only bound is elemental D, no COMPOUND caps this dopant in the archive.
+          // The cap is then an upper bound on mu_D, so Ef for a defect that ADDS D is a lower bound.
+          const onlyEl=!cands.some(x=>Math.abs(x.dHf)>1e-6);
+          if(onlyEl){
+            const adds=((r.dn||{})[D]||0)>0;
+            h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a5541a">No ${D}-containing compound built only from ${D} and the host elements is archived at ${THEORY[r.f]},
+              so elemental ${D} is the only bound and the cap sits at Δμ<sub>${D}</sub> = 0. A real ${D} compound would cap μ<sub>${D}</sub> lower, so this μ<sub>${D}</sub> is an
+              upper bound and the formation energy below is a ${adds?"lower":"upper"} bound — the true value is ${adds?"higher":"lower"}. Adding that phase to the ${THEORY[r.f]} set is what tightens it.</span>`;
+          }
         }
         return h;
       })();
