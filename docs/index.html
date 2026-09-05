@@ -911,6 +911,41 @@ async function dOpenDetail(r){
       const els=Object.keys(r.ceq.host_fu);
       const co=n=>n===1?"":(Math.round(n*1000)/1000+"·");
       const dmuS=e=>`Δμ<sub>${e}</sub>`;
+      // ra190: step 6 -- the Level-2 solubility cap for every extrinsic element this defect
+      // exchanges. Steps 1-5 showed the host elements only; the dopant mu appeared in the table
+      // with no derivation ("no equation for Ba related phases").
+      const capsHTML=(()=>{
+        const caps=vxv.caps||{}; const Ds=Object.keys(caps); if(!Ds.length) return "";
+        const f3=x=>(x==null?"—":(+x).toFixed(3));
+        const fuS=fu=>Object.entries(fu).map(([e,n])=>co(n)+dmuS(e)).join(" + ");
+        let h=`<br>6. Extrinsic species — solubility cap (level 2). A dopant's μ is not a free dial: it rises with supply
+          only until a phase containing it precipitates. For every archived ${THEORY[r.f]} phase P that contains D and
+          whose other elements are host elements, Σm<sub>i</sub>Δμ<sub>i</sub> + m<sub>D</sub>Δμ<sub>D</sub> ≤ ΔH<sub>f</sub>(P)
+          ⇒ Δμ<sub>D</sub> ≤ (ΔH<sub>f</sub>(P) − Σm<sub>i</sub>Δμ<sub>i</sub>)/m<sub>D</sub>, with the host Δμ<sub>i</sub>
+          of step 4 substituted; and Δμ<sub>D</sub> ≤ 0 always (no elemental D). The cap is the minimum, and the phase
+          that sets it is the solubility-limiting phase.`;
+        for(const D of Ds){
+          const c=caps[D]; const cands=c.candidates||[];
+          h+=`<br>&nbsp;&nbsp;&nbsp;<b>${D}</b>: μ⁰<sub>${D}</sub> = ${f3(c.mu0)} eV/atom (elemental reference, this library's own run).`;
+          if(cands.length){
+            for(const x of cands){
+              const rest=x.rest||0;
+              h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${fuS(x.fu)} ≤ ΔH<sub>f</sub>(${subHTML(x.phase)}) = ${f3(x.dHf)} eV/f.u.
+                ⇒ Δμ<sub>${D}</sub> ≤ (${f3(x.dHf)} − (${f3(rest)}))/${co(x.mD)||"1"} = <b>${f3(x.bound)}</b>`+
+                (x.phase===c.limiting_phase?` <span style="color:var(--wbg-muted)">← limiting phase</span>`:"");
+            }
+          }else if(c.n_candidate_phases>0){
+            h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${c.n_candidate_phases} candidate phase(s) archived; the inequality list was not stored by this solve.`;
+          }
+          h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Δμ<sub>${D}</sub> ≤ 0 (elemental ${D} — the “rich” limit)`+
+             ((c.limiting_phase||"").replace("(elemental)","")===D&&!cands.some(x=>x.phase===c.limiting_phase)?` <span style="color:var(--wbg-muted)">← limiting phase</span>`:"");
+          if(!cands.length&&!c.n_candidate_phases)
+            h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:var(--wbg-muted)">No ${D}-containing compound with only host elements is archived at ${THEORY[r.f]}, so the elemental limit is the only bound.</span>`;
+          h+=`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Cap = min = ${f3(c.dmu)} eV (limiting phase ${subHTML((c.limiting_phase||"").replace("(elemental)"," (elemental)"))})
+            → μ<sub>${D}</sub> = ${f3(c.mu0)} + (${f3(c.dmu)}) = <b>${f3(c.mu)}</b> eV`;
+        }
+        return h;
+      })();
       sig+=`<div class="notebox" style="font-size:12.5px;line-height:1.85;margin:10px 0 4px">
         <b>How the ${subHTML(vname)} chemical potentials are fixed</b><br>
         1. Elemental references (${THEORY[r.f]}, this library's own runs): `+
@@ -928,7 +963,7 @@ async function dOpenDetail(r){
         4. Solved at this corner: `+
         els.map(e=>`μ<sub>${e}</sub> = ${r.ceq.mu0[e].toFixed(3)} + (${vxv.dmu[e].toFixed(3)}) = <b>${(r.ceq.mu0[e]+vxv.dmu[e]).toFixed(3)}</b>`).join(" · ")+` eV<br>
         5. This defect exchanges ${Object.entries(r.dn||{}).map(([e,n])=>`${n>0?"+":""}${n} ${e}`).join(", ")}
-        → Σn<sub>i</sub>μ<sub>i</sub> in the table below.</div>`;
+        → Σn<sub>i</sub>μ<sub>i</sub> in the table below.`+capsHTML+`</div>`;
     }
     sig+=`<div style="margin:10px 0 4px"><b>${subHTML(vname)} vertex</b>
       <span style="color:var(--wbg-muted)">(bounding phases: ${subHTML(phases)})</span></div>
