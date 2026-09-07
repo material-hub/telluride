@@ -1702,34 +1702,17 @@ function stepTable(st){
   return `<table class="steptab"><thead><tr><th>step</th><th>E (eV)</th><th>ΔE (eV)</th>`
     +`<th>max|F| (eV/Å)</th><th>on atom</th><th>max|σ| (kBar)</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
-let INCAR_TYPER=null;
-// Type the inputs card out line by line. Word-by-word would jitter the aligned "=" column of a
-// fixed-pitch block on every token, so a monospace listing reveals a whole line at a time.
 function typeLines(el, html, done){
-  if(INCAR_TYPER){clearInterval(INCAR_TYPER);INCAR_TYPER=null;}
-  const tmp=document.createElement("div"); tmp.innerHTML=html;
-  const blocks=[...tmp.children];
-  el.replaceChildren();
-  let bi=0, li=0, lines=null, target=null;
-  const step=()=>{
-    if(bi>=blocks.length){clearInterval(INCAR_TYPER);INCAR_TYPER=null;if(done)done();return;}
-    const b=blocks[bi];
-    if(!b.classList||!b.classList.contains("tw")){ el.appendChild(b.cloneNode(true)); bi++; return; }
-    if(lines===null){
-      lines=b.innerHTML.split("\n");
-      target=b.cloneNode(false); target.textContent=""; el.appendChild(target); li=0;
-    }
-    const chunk=Math.max(1,Math.ceil(lines.length/12));       // any block finishes in ~12 ticks
-    target.innerHTML=lines.slice(0,Math.min(lines.length,li+=chunk)).join("\n");
-    if(li>=lines.length){ bi++; lines=null; target=null; }
-  };
-  INCAR_TYPER=setInterval(step,40);
-  step();
+  /* Was a typewriter that revealed the card a line at a time. It is a listing of this run's
+     own INCAR, POTCAR and KPOINTS -- animating it delays reading and looks generated, so it
+     renders at once. */
+  el.innerHTML=html;
+  if(done)done();
 }
 let INCAR_TICKET=0;
 function openIncar(theory,r,ord){
   document.getElementById("incartitle").innerHTML=r?subHTML(r.n):theory;
-  let body="Reading this run's INCAR, POTCAR, KPOINTS and ionic steps…";
+  let body="This run's INCAR, POTCAR, KPOINTS and ionic steps.";
   if(r&&ord&&r.o[ord]){
     const v=r.o[ord], R=REFS[r.rk||r.f]||{}, paw=R.paw||{};
     const els=[...new Set((r.n.match(/[A-Z][a-z]?/g)||[]))];
@@ -2463,7 +2446,7 @@ function postKosmosTrajectory(){
   if(frame.dataset.ready==="1"&&MVM.kosmosPayload) frame.contentWindow.postMessage(MVM.kosmosPayload,location.origin);
 }
 async function mvmLoad(sub){
-  const t=MVM.data[sub]; MVM.cur=t; MVM.frame=0;
+  const t=MVM.data[sub]; MVM.cur=t; MVM.frame=0; MVM.armed=false;
   const frames=t.frames, eLast=frames[frames.length-1].e;
   const dE0=Number.isFinite(frames[0].e)&&Number.isFinite(eLast)?frames[0].e-eLast:null;
   const decreaseText=dE0===null?"per-step energies not archived — movie shows geometry only"
@@ -2553,7 +2536,23 @@ async function mvmShow(i){
      <span><small>Energy above final structure</small><b>${de!==null?(de>=0?"+":"")+de.toFixed(2):"Unavailable"} eV</b></span>
      <span><small>Maximum atomic force</small><b>${f.f!==null&&f.f!==undefined?f.f.toFixed(2)+" eV/Å":"Unavailable"}</b></span>
    </div>`;
-  sgShow(document.getElementById("mvm-grid"),{type:"struct",cif:structureCIF(mvmStructure(f))});
+  const grid=document.getElementById("mvm-grid");
+  const cif=structureCIF(mvmStructure(f));
+  sgShow(grid,{type:"struct",cif:cif});
+  /* The viewer keeps the camera only on its in-place path, and that path needs
+     window.__sgS, which does not exist until the first CIF has been parsed. Measured on a
+     15-frame movie: frame 0 -> 1 ran the slow path and threw the camera away, and only
+     frame 1 -> 2 onwards was fast. Re-send this same frame until __sgS appears, so the
+     first move the reader makes is already on the fast path. */
+  if(!MVM.armed){
+    let tries=0;
+    const arm=setInterval(()=>{
+      const fr=grid.querySelector("iframe.sgframe");
+      let ready=false;
+      try{ ready=!!(fr&&fr.contentWindow&&fr.contentWindow.__sgS); }catch(e){}
+      if(ready||++tries>40){ clearInterval(arm); if(ready){ MVM.armed=true; sgShow(grid,{type:"struct",cif:cif}); } return; }
+    },200);
+  }
 }
 let MVSPEED=1;
 function mvmTick(){
